@@ -1,0 +1,6 @@
+# Project exclude paths
+/APIChat/target/
+/ChatClientNetwork/target/
+/ChatCommon/target/
+/ChatServer/target/
+/target/
