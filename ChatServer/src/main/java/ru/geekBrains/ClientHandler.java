@@ -67,7 +67,6 @@ public class ClientHandler {
     }
 
     private void authenticate() {
-        Timer timer = new Timer();
         System.out.println("Authenticate started!");
         try {
             while (true) {
