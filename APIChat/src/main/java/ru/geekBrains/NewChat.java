@@ -10,6 +10,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class NewChat extends JFrame implements ActionListener, MessageProcessor {
+
+
     private static final int WIDTH = 500;
     private static final int HEIGHT = 500;
     private final JPanel panelMain = new JPanel(new BorderLayout());
@@ -19,7 +21,7 @@ public class NewChat extends JFrame implements ActionListener, MessageProcessor 
     JMenu help = new JMenu("Help");
     final JMenuItem connect = menu.add(new StyledEditorKit.ForegroundAction("Connect", Color.LIGHT_GRAY));
     final JMenuItem IPAdd = menu.add(new StyledEditorKit.ForegroundAction("IPAddress", Color.LIGHT_GRAY));
-    final JMenuItem port = menu.add(new StyledEditorKit.ForegroundAction("Port", Color.LIGHT_GRAY));
+    final JMenuItem jMenuItemPort = menu.add(new StyledEditorKit.ForegroundAction("Port", Color.LIGHT_GRAY));
     final JMenuItem mail = help.add(new StyledEditorKit.ForegroundAction("Support@mail.com", Color.LIGHT_GRAY));
 
     private final JPanel panelBottomUp = new JPanel(new GridLayout(1,5));
@@ -37,8 +39,8 @@ public class NewChat extends JFrame implements ActionListener, MessageProcessor 
 
     private MessageService messageService;
 
-    private String name;
-    private String password;
+    private int port = 8189;
+    private String ip = "localhost";
 
     private final JList<String> userList = new JList<>();
     private final String ALL = "SEND TO ALL";
@@ -83,24 +85,19 @@ public class NewChat extends JFrame implements ActionListener, MessageProcessor 
             }
         });
 
-        port.addActionListener(new ActionListener() {
+        jMenuItemPort.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 String result = JOptionPane.showInputDialog(
                         NewChat.this,"Введите port");
-                name = result;
+                chat.append(result);
+                port = Integer.parseInt(result);
             }
         });
 
         connect.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                if(IPAdd != null) {
-                    if (!IPAdd.equals(password)) {
-                        JOptionPane.showInputDialog(NewChat.this,
-                                new String[] {"Неверно введен пароль!",
-                                        "Повторите пароль :"},
-                                "Авторизация",
-                                JOptionPane.WARNING_MESSAGE);
-                    }
+                if(IPAdd != null ) {
+                    messageService = new ChatMessageService(ip, port, NewChat.this);
                 }
 
             }
@@ -110,6 +107,8 @@ public class NewChat extends JFrame implements ActionListener, MessageProcessor 
             public void actionPerformed(ActionEvent e) {
                 String result = JOptionPane.showInputDialog(
                        NewChat.this,"Введите IP Address");
+                ip = result;
+                chat.append(result);
             }
         });
 
@@ -120,7 +119,7 @@ public class NewChat extends JFrame implements ActionListener, MessageProcessor 
             }
         });
 
-        messageService = new ChatMessageService("localhost", 8189, this);
+//        messageService = new ChatMessageService(ip, port, this);
 
         setVisible(true);
     }
@@ -205,6 +204,6 @@ public class NewChat extends JFrame implements ActionListener, MessageProcessor 
     }
 
     private void showError(MessageDTO dto){
-                JOptionPane.showMessageDialog(NewChat.this, "Не веррный логин или пароль!");
+                JOptionPane.showMessageDialog(NewChat.this, dto.getBody());
     }
 }

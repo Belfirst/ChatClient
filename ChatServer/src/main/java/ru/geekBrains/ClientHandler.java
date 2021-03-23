@@ -8,6 +8,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Timer;
+import java.util.TimerTask;
 
 public class ClientHandler {
     private Socket socket;
@@ -25,7 +26,7 @@ public class ClientHandler {
             System.out.println("CH created!");
 
             new Thread(() -> {
-                authenticate();
+                if(authenticate())
                 readMessages();
             }).start();
 
@@ -44,7 +45,7 @@ public class ClientHandler {
 
     private void readMessages() {
         try {
-            while (!Thread.currentThread().isInterrupted()) {
+            while (!Thread.currentThread().isInterrupted() || socket.isConnected()) {
                 String msg = inputStream.readUTF();
                 MessageDTO dto = MessageDTO.convertFromJson(msg);
                 dto.setFrom(currentUserName);
@@ -55,8 +56,9 @@ public class ClientHandler {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
             Thread.currentThread().interrupt();
+            throw new RuntimeException("Disconnect");
         } finally {
             closeHandler();
         }
@@ -66,7 +68,16 @@ public class ClientHandler {
         return currentUserName;
     }
 
-    private void authenticate() {
+    private boolean authenticate() {
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println("Disconnect client");
+                closeHandler();
+            }
+        },30000);
+
         System.out.println("Authenticate started!");
         try {
             while (true) {
@@ -90,14 +101,18 @@ public class ClientHandler {
                     chatServer.subscribe(this);
                     System.out.println("Subscribed");
                     sendMessage(response);
-                    break;
+                    timer.cancel();
+                    return true;
                 }
                 sendMessage(response);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
             closeHandler();
+            throw new RuntimeException("Error auth");
+
         }
+
     }
 
     public void closeHandler() {
