@@ -15,16 +15,18 @@ public class NetworkService {
         this.inputStream = new DataInputStream(socket.getInputStream());
         this.outputStream = new DataOutputStream(socket.getOutputStream());
 
-        new Thread(() -> {
+        Thread t = new Thread(() -> {
             while (true) {
                 try {
                     String msg = inputStream.readUTF();
                     messageService.receiveMessage(msg);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException("Time out",e);
                 }
             }
-        }).start();
+        });
+        t.setDaemon(true);
+        t.start();
     }
 
     public void writeMessage(String msg) {
