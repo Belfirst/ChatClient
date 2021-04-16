@@ -1,4 +1,4 @@
-package ru.geekBrains;
+package ru.geekBrains.db;
 
 import java.sql.*;
 

@@ -1,6 +1,6 @@
 package ru.geekBrains.auth;
 
-import ru.geekBrains.DBService;
+import ru.geekBrains.db.DBService;
 
 public class DBAuthService implements AuthService {
 

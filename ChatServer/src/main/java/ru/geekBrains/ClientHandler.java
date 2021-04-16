@@ -1,5 +1,6 @@
 package ru.geekBrains;
 
+import ru.geekBrains.db.DBService;
 import ru.geekbrains.messages.MessageDTO;
 import ru.geekbrains.messages.MessageType;
 
