@@ -21,8 +21,7 @@ public class NetworkService {
                     String msg = inputStream.readUTF();
                     messageService.receiveMessage(msg);
                 } catch (IOException e) {
-                    throw new RuntimeException("Time out");
-//                    e.printStackTrace();
+                    throw new RuntimeException("Time out",e);
                 }
             }
         });

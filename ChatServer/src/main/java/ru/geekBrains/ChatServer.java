@@ -1,7 +1,7 @@
 package ru.geekBrains;
 
 import ru.geekBrains.auth.AuthService;
-import ru.geekBrains.auth.PrimitiveAuthService;
+import ru.geekBrains.auth.DBAuthService;
 import ru.geekbrains.messages.MessageDTO;
 import ru.geekbrains.messages.MessageType;
 
@@ -19,10 +19,10 @@ public class ChatServer {
     public ChatServer() {
         try (ServerSocket serverSocket = new ServerSocket(PORT)){
             System.out.println("Server started");
-            authService = new PrimitiveAuthService();
+            authService = new DBAuthService();
             authService.start();
             onlineClientsList = new LinkedList<>();
-            while(true) {
+            while (true) {
                 System.out.println("Waiting for connection...");
                 Socket socket = serverSocket.accept();
                 System.out.println("Client connected!");
@@ -59,11 +59,11 @@ public class ChatServer {
         MessageDTO dto = new MessageDTO();
         dto.setMessageType(MessageType.CLIENTS_LIST_MESSAGE);
 
-        List<String> onlines = new LinkedList<>();
+        List<String> isOnline = new LinkedList<>();
         for (ClientHandler clientHandler : onlineClientsList) {
-            onlines.add(clientHandler.getCurrentUserName());
+            isOnline.add(clientHandler.getCurrentUserName());
         }
-        dto.setUserOnline(onlines);
+        dto.setUserOnline(isOnline);
         broadcastMessage(dto);
     }
 

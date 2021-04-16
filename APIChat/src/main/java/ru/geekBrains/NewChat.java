@@ -6,10 +6,8 @@ import ru.geekbrains.messages.MessageType;
 import javax.swing.*;
 import javax.swing.text.StyledEditorKit;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
-public class NewChat extends JFrame implements ActionListener, MessageProcessor {
+public class NewChat extends JFrame implements MessageProcessor {
 
 
     private static final int WIDTH = 500;
@@ -22,12 +20,13 @@ public class NewChat extends JFrame implements ActionListener, MessageProcessor 
     final JMenuItem connect = menu.add(new StyledEditorKit.ForegroundAction("Connect", Color.LIGHT_GRAY));
     final JMenuItem IPAdd = menu.add(new StyledEditorKit.ForegroundAction("IPAddress", Color.LIGHT_GRAY));
     final JMenuItem jMenuItemPort = menu.add(new StyledEditorKit.ForegroundAction("Port", Color.LIGHT_GRAY));
+    final JMenuItem nickname = menu.add(new StyledEditorKit.ForegroundAction("Change user name", Color.LIGHT_GRAY));
     final JMenuItem mail = help.add(new StyledEditorKit.ForegroundAction("Support@mail.com", Color.LIGHT_GRAY));
 
     private final JPanel panelBottomUp = new JPanel(new GridLayout(1,5));
     private final JTextField tfLogin = new JTextField();
     private final JTextField tfPassword = new JTextField();
-    private final JLabel lLogin = new JLabel("NickName");
+    private final JLabel lLogin = new JLabel("UserName");
     private final JLabel lPassword = new JLabel("Password");
     private final JButton auth = new JButton("Auth");
 
@@ -67,9 +66,7 @@ public class NewChat extends JFrame implements ActionListener, MessageProcessor 
         JScrollPane scrollChat = new JScrollPane(chat);
         JScrollPane scrollUser = new JScrollPane(userList);
         scrollUser.setPreferredSize(new Dimension(100, 0));
-//        String[] users = {"user1", "user2", "user3"};
-//        userList.setListData(users);
-        btnSend.addActionListener(this);
+
         panelBottom.add(tfMessage, BorderLayout.CENTER);
         panelBottom.add(btnSend, BorderLayout.EAST);
 
@@ -79,57 +76,42 @@ public class NewChat extends JFrame implements ActionListener, MessageProcessor 
         panelMain.add(panelBottom, BorderLayout.SOUTH);
         panelMain.add(panelBottomUp,BorderLayout.NORTH);
 
-        tfMessage.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                sendMessage();
-            }
+        tfMessage.addActionListener(e -> sendMessage());
+
+        btnSend.addActionListener(e -> sendMessage());
+
+        jMenuItemPort.addActionListener(e -> {
+            String result = JOptionPane.showInputDialog(
+                    NewChat.this,"Введите port");
+            chat.append(result);
+            port = Integer.parseInt(result);
         });
 
-        jMenuItemPort.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                String result = JOptionPane.showInputDialog(
-                        NewChat.this,"Введите port");
-                chat.append(result);
-                port = Integer.parseInt(result);
+        connect.addActionListener(e -> {
+            if(IPAdd != null ) {
+                messageService = new ChatMessageService(ip, port, NewChat.this);
             }
+
         });
 
-        connect.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if(IPAdd != null ) {
-                    messageService = new ChatMessageService(ip, port, NewChat.this);
-                }
-
-            }
+        IPAdd.addActionListener(e -> {
+            String result = JOptionPane.showInputDialog(
+                   NewChat.this,"Введите IP Address");
+            ip = result;
+            chat.append(result);
         });
 
-        IPAdd.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                String result = JOptionPane.showInputDialog(
-                       NewChat.this,"Введите IP Address");
-                ip = result;
-                chat.append(result);
-            }
+        nickname.addActionListener(e -> {
+            String result = JOptionPane.showInputDialog(
+                    NewChat.this,"Введите новое имя");
+            changeNickname(result);
         });
 
-        auth.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                sendAuth();
-            }
-        });
+        auth.addActionListener(e -> sendAuth());
 
-//        messageService = new ChatMessageService(ip, port, this);
+        messageService = new ChatMessageService(ip, port, this);
 
         setVisible(true);
-    }
-
-    public void actionPerformed(ActionEvent e) {
-        Object src = e.getSource();
-        if (src == btnSend) {
-            messageService.sendMessage(tfMessage.getText());
-            tfMessage.setText("");
-        }
     }
 
     @Override
@@ -137,11 +119,10 @@ public class NewChat extends JFrame implements ActionListener, MessageProcessor 
         MessageDTO dto = MessageDTO.convertFromJson(msg);
         System.out.println("Received message");
         switch (dto.getMessageType()) {
-            case PUBLIC_MESSAGE,PRIVATE_MESSAGE -> showMessage(dto);
+            case PUBLIC_MESSAGE,PRIVATE_MESSAGE,SERVICE_MESSAGE -> showMessage(dto);
             case CLIENTS_LIST_MESSAGE -> refreshUserList(dto);
             case ERROR_MESSAGE -> showError(dto);
-            case AUTH_CONFIRM ->
-                    panelBottomUp.setVisible(false);
+            case AUTH_CONFIRM -> panelBottomUp.setVisible(false);
         }
     }
 
@@ -161,24 +142,6 @@ public class NewChat extends JFrame implements ActionListener, MessageProcessor 
         tfMessage.setText("");
     }
 
-//    private void sendMessage(){
-//        String message = tfMessage.getText();
-//        if(message.length() == 0) return;
-//            MessageDTO dto = new MessageDTO();
-//            if(message.startsWith("/w")) {
-//                String[] parts = message.split("\\s");
-//                dto.setTo(parts[1]);
-//                message = "";
-//                for(int i = 2; i < parts.length; i++){
-//                    message += parts[i];
-//                }
-//                dto.setMessageType(MessageType.PRIVATE_MESSAGE);
-//            } else dto.setMessageType(MessageType.PUBLIC_MESSAGE);
-//            dto.setBody(message);
-//            messageService.sendMessage(dto.convertToJson());
-//            tfMessage.setText("");
-//    }
-
     private void showMessage(MessageDTO message) {
         String msg = String.format("[%s] [%s] -> %s\n", message.getMessageType(),message.getFrom(), message.getBody());
         chat.append(msg);
@@ -195,6 +158,15 @@ public class NewChat extends JFrame implements ActionListener, MessageProcessor 
         dto.setMessageType(MessageType.SEND_AUTH_MESSAGE);
         messageService.sendMessage(dto.convertToJson());
         System.out.println("Sent " + log + " " + pass);
+    }
+
+    public void changeNickname(String newNickname){
+        if (newNickname.equals("")) return;
+        MessageDTO dto = new MessageDTO();
+        dto.setBody(newNickname);
+        dto.setMessageType(MessageType.SERVICE_MESSAGE);
+        messageService.sendMessage(dto.convertToJson());
+        System.out.println("Sent " + newNickname);
     }
 
     private void refreshUserList(MessageDTO dto){

@@ -53,12 +53,17 @@ public class ClientHandler {
                 switch (dto.getMessageType()) {
                     case PUBLIC_MESSAGE -> chatServer.broadcastMessage(dto);
                     case PRIVATE_MESSAGE -> chatServer.sendPrivateMessage(dto);
+                    case SERVICE_MESSAGE -> {
+                        currentUserName = replaceUserName(currentUserName, dto.getBody());
+                        chatServer.broadcastOnlineClients();
+                        chatServer.broadcastMessage(dto);
+                    }
+
                 }
             }
         } catch (IOException e) {
-//            e.printStackTrace();
             Thread.currentThread().interrupt();
-            throw new RuntimeException("Disconnect");
+            throw new RuntimeException("Disconnect",e);
         } finally {
             closeHandler();
         }
@@ -107,12 +112,17 @@ public class ClientHandler {
                 sendMessage(response);
             }
         } catch (IOException e) {
-//            e.printStackTrace();
             closeHandler();
-            throw new RuntimeException("Error auth");
+            throw new RuntimeException("Error auth", e);
 
         }
 
+    }
+
+    public String replaceUserName(String userName, String newUserName) {
+        DBService dbService = new DBService();
+        if(!dbService.changeUserName(userName,newUserName)) return userName;
+        return newUserName;
     }
 
     public void closeHandler() {
