@@ -9,7 +9,6 @@ import java.awt.*;
 
 public class NewChat extends JFrame implements MessageProcessor {
 
-
     private static final int WIDTH = 500;
     private static final int HEIGHT = 500;
     private final JPanel panelMain = new JPanel(new BorderLayout());
@@ -147,7 +146,6 @@ public class NewChat extends JFrame implements MessageProcessor {
         chat.append(msg);
     }
 
-//    public void sendAuth(ActionEvent actionEvent) {
       public void sendAuth() {
         String log = tfLogin.getText();
         String pass = tfPassword.getText();
