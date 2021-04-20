@@ -1,5 +1,6 @@
 package ru.geekBrains;
 
+import ru.geekBrains.histoty.SaveHistory;
 import ru.geekbrains.messages.MessageDTO;
 import ru.geekbrains.messages.MessageType;
 
@@ -36,6 +37,7 @@ public class NewChat extends JFrame implements MessageProcessor {
     private final JTextField tfMessage = new JTextField();
 
     private MessageService messageService;
+    private final SaveHistory saveHistory = new SaveHistory();
 
     private int port = 8189;
     private String ip = "localhost";
@@ -121,7 +123,10 @@ public class NewChat extends JFrame implements MessageProcessor {
             case PUBLIC_MESSAGE,PRIVATE_MESSAGE,SERVICE_MESSAGE -> showMessage(dto);
             case CLIENTS_LIST_MESSAGE -> refreshUserList(dto);
             case ERROR_MESSAGE -> showError(dto);
-            case AUTH_CONFIRM -> panelBottomUp.setVisible(false);
+            case AUTH_CONFIRM -> {panelBottomUp.setVisible(false);
+                saveHistory.openFile(dto.getLogin());
+                showHistory();
+            }
         }
     }
 
@@ -143,6 +148,12 @@ public class NewChat extends JFrame implements MessageProcessor {
 
     private void showMessage(MessageDTO message) {
         String msg = String.format("[%s] [%s] -> %s\n", message.getMessageType(),message.getFrom(), message.getBody());
+        chat.append(msg);
+        saveHistory.writingToFile(msg);
+    }
+
+    private void showHistory(){
+        String msg = saveHistory.readFromFile();
         chat.append(msg);
     }
 

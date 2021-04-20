@@ -103,6 +103,7 @@ public class ClientHandler {
                 } else {
                     response.setMessageType(MessageType.AUTH_CONFIRM);
                     response.setBody(username);
+                    response.setLogin(dto.getLogin());
                     currentUserName = username;
                     chatServer.subscribe(this);
                     System.out.println("Subscribed");
