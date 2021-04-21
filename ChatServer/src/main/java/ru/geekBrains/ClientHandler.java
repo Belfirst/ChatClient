@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ClientHandler {
     private Socket socket;
@@ -17,6 +19,7 @@ public class ClientHandler {
     private DataInputStream inputStream;
     private ChatServer chatServer;
     private String currentUserName;
+    private ExecutorService es = Executors.newSingleThreadExecutor();
 
     public ClientHandler(Socket socket, ChatServer chatServer) {
         try {
@@ -26,8 +29,11 @@ public class ClientHandler {
             this.outputStream = new DataOutputStream(socket.getOutputStream());
             System.out.println("CH created!");
 
-            if(authenticate())
-                readMessages();
+            es.execute(() -> {
+                if(authenticate())
+                    readMessages();
+            });
+            es.shutdown();
 
 //            new Thread(() -> {
 //                if(authenticate())

@@ -10,15 +10,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class ChatServer {
     private static final int PORT = 8189;
     private List<ClientHandler> onlineClientsList;
     private AuthService authService;
-
-    private ExecutorService executorService = Executors.newCachedThreadPool();
 
     public ChatServer() {
         try (ServerSocket serverSocket = new ServerSocket(PORT)){
@@ -30,10 +26,7 @@ public class ChatServer {
                 System.out.println("Waiting for connection...");
                 Socket socket = serverSocket.accept();
                 System.out.println("Client connected!");
-                executorService.execute(() -> {
-                    new ClientHandler(socket, this);
-                });
-//                new ClientHandler(socket, this);
+                new ClientHandler(socket, this);
             }
         } catch (IOException e) {
             e.printStackTrace();
