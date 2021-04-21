@@ -26,10 +26,13 @@ public class ClientHandler {
             this.outputStream = new DataOutputStream(socket.getOutputStream());
             System.out.println("CH created!");
 
-            new Thread(() -> {
-                if(authenticate())
+            if(authenticate())
                 readMessages();
-            }).start();
+
+//            new Thread(() -> {
+//                if(authenticate())
+//                readMessages();
+//            }).start();
 
         } catch (IOException e) {
             e.printStackTrace();
