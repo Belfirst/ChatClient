@@ -1,4 +1,4 @@
-package ru.geekBrains;
+package ru.geekBrains.oldServer;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
