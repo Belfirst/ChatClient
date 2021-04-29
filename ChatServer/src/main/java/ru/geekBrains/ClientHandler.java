@@ -1,5 +1,7 @@
 package ru.geekBrains;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.geekBrains.db.DBService;
 import ru.geekbrains.messages.MessageDTO;
 import ru.geekbrains.messages.MessageType;
@@ -19,7 +21,8 @@ public class ClientHandler {
     private DataInputStream inputStream;
     private ChatServer chatServer;
     private String currentUserName;
-    private ExecutorService es = Executors.newSingleThreadExecutor();
+
+    static final Logger userLogger = LogManager.getLogger(ClientHandler.class.getName());
 
     public ClientHandler(Socket socket, ChatServer chatServer) {
         try {
@@ -27,18 +30,14 @@ public class ClientHandler {
             this.socket = socket;
             this.inputStream = new DataInputStream(socket.getInputStream());
             this.outputStream = new DataOutputStream(socket.getOutputStream());
-            System.out.println("CH created!");
+            userLogger.info("CH created!");
 
+            ExecutorService es = Executors.newCachedThreadPool();
             es.execute(() -> {
                 if(authenticate())
                     readMessages();
             });
             es.shutdown();
-
-//            new Thread(() -> {
-//                if(authenticate())
-//                readMessages();
-//            }).start();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -59,6 +58,7 @@ public class ClientHandler {
                 String msg = inputStream.readUTF();
                 MessageDTO dto = MessageDTO.convertFromJson(msg);
                 dto.setFrom(currentUserName);
+                userLogger.info(currentUserName + " send message");
 
                 switch (dto.getMessageType()) {
                     case PUBLIC_MESSAGE -> chatServer.broadcastMessage(dto);
@@ -67,12 +67,14 @@ public class ClientHandler {
                         currentUserName = replaceUserName(currentUserName, dto.getBody());
                         chatServer.broadcastOnlineClients();
                         chatServer.broadcastMessage(dto);
+
                     }
 
                 }
             }
         } catch (IOException e) {
             Thread.currentThread().interrupt();
+            userLogger.info(currentUserName + " disconnect");
             throw new RuntimeException("Disconnect",e);
         } finally {
             closeHandler();
@@ -88,34 +90,34 @@ public class ClientHandler {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                System.out.println("Disconnect client");
+                userLogger.info("Disconnect client");
                 closeHandler();
             }
         },30000);
-
-        System.out.println("Authenticate started!");
+        userLogger.info("Authenticate started!");
         try {
             while (true) {
                 String authMessage = inputStream.readUTF();
-                System.out.println("received msg ");
+                userLogger.info("Received msg");
                 MessageDTO dto = MessageDTO.convertFromJson(authMessage);
                 String username = chatServer.getAuthService().getUsernameByLoginPass(dto.getLogin(), dto.getPassword());
                 MessageDTO response = new MessageDTO();
                 if (username == null) {
                     response.setMessageType(MessageType.ERROR_MESSAGE);
                     response.setBody("Wrong login or pass!");
-                    System.out.println("Wrong auth");
+                    userLogger.info("Wrong auth");
                 } else if(chatServer.isUserBusy(username)) {
                     response.setMessageType(MessageType.ERROR_MESSAGE);
                     response.setBody("U're clone");
                     System.out.println("Clone");
+                    userLogger.info("duplicate client");
                 } else {
                     response.setMessageType(MessageType.AUTH_CONFIRM);
                     response.setBody(username);
                     response.setLogin(dto.getLogin());
                     currentUserName = username;
                     chatServer.subscribe(this);
-                    System.out.println("Subscribed");
+                    userLogger.info(currentUserName + " Subscribed");
                     sendMessage(response);
                     timer.cancel();
                     return true;
@@ -125,7 +127,6 @@ public class ClientHandler {
         } catch (IOException e) {
             closeHandler();
             throw new RuntimeException("Error auth", e);
-
         }
 
     }
@@ -133,6 +134,7 @@ public class ClientHandler {
     public String replaceUserName(String userName, String newUserName) {
         DBService dbService = new DBService();
         if(!dbService.changeUserName(userName,newUserName)) return userName;
+        userLogger.info(userName + " change " + newUserName);
         return newUserName;
     }
 

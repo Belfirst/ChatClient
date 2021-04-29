@@ -123,9 +123,10 @@ public class NewChat extends JFrame implements MessageProcessor {
             case PUBLIC_MESSAGE,PRIVATE_MESSAGE,SERVICE_MESSAGE -> showMessage(dto);
             case CLIENTS_LIST_MESSAGE -> refreshUserList(dto);
             case ERROR_MESSAGE -> showError(dto);
-            case AUTH_CONFIRM -> {panelBottomUp.setVisible(false);
+            case AUTH_CONFIRM -> {
+                panelBottomUp.setVisible(false);
                 saveHistory.openFile(dto.getLogin());
-                showHistory();
+                showHistory(dto.getLogin());
             }
         }
     }
@@ -152,9 +153,9 @@ public class NewChat extends JFrame implements MessageProcessor {
         saveHistory.writingToFile(msg);
     }
 
-    private void showHistory(){
-        String msg = saveHistory.readFromFile();
-        chat.append(msg);
+    private void showHistory(String login){
+        String msg = saveHistory.readFromFile(login);
+        chat.append(msg + "\n");
     }
 
       public void sendAuth() {

@@ -9,18 +9,7 @@ import java.util.List;
 
 public class SaveHistory {
 
-    private String login;
     private FileOutputStream out;
-
-//    public void writingToFile(String login, String message){
-//        byte[] outData = message.getBytes(StandardCharsets.UTF_8);
-//        try(FileOutputStream out = new FileOutputStream("history_" + login + ".txt", true)){
-//            out.write(outData);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//    }
 
     public void writingToFile(String message){
         byte[] outData = message.getBytes(StandardCharsets.UTF_8);
@@ -31,7 +20,7 @@ public class SaveHistory {
         }
     }
 
-    public String readFromFile(){
+    public String readFromFile(String login){
 
         List<String> file = null;
         try {
@@ -54,7 +43,6 @@ public class SaveHistory {
     }
 
     public void openFile(String login){
-        this.login = login;
         try {
             out = new FileOutputStream("history_" + login + ".txt", true);
         } catch (IOException e) {

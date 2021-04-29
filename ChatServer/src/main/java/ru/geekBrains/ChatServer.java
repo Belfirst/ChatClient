@@ -1,5 +1,8 @@
 package ru.geekBrains;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import ru.geekBrains.auth.AuthService;
 import ru.geekBrains.auth.DBAuthService;
 import ru.geekbrains.messages.MessageDTO;
@@ -12,20 +15,21 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class ChatServer {
+    static final Logger userLogger = LogManager.getLogger(ChatServer.class.getName());
+
     private static final int PORT = 8189;
     private List<ClientHandler> onlineClientsList;
     private AuthService authService;
 
     public ChatServer() {
         try (ServerSocket serverSocket = new ServerSocket(PORT)){
-            System.out.println("Server started");
+            userLogger.info("Server started");
             authService = new DBAuthService();
-            authService.start();
             onlineClientsList = new LinkedList<>();
             while (true) {
-                System.out.println("Waiting for connection...");
+                userLogger.info("Waiting for connection...");
                 Socket socket = serverSocket.accept();
-                System.out.println("Client connected!");
+                userLogger.info("Client connected!");
                 new ClientHandler(socket, this);
             }
         } catch (IOException e) {
