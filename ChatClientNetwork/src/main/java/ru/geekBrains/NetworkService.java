@@ -16,12 +16,16 @@ public class NetworkService {
         this.outputStream = new DataOutputStream(socket.getOutputStream());
 
         Thread t = new Thread(() -> {
-            while (true) {
+            while (socket.isConnected()) {
                 try {
                     String msg = inputStream.readUTF();
                     messageService.receiveMessage(msg);
                 } catch (IOException e) {
-                    throw new RuntimeException("Time out",e);
+                    try {
+                        socket.close();
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
                 }
             }
         });
@@ -29,11 +33,7 @@ public class NetworkService {
         t.start();
     }
 
-    public void writeMessage(String msg) {
-        try {
+    public void writeMessage(String msg) throws IOException {
             outputStream.writeUTF(msg);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }

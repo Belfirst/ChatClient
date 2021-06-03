@@ -27,8 +27,8 @@ public class DBService {
             }
 
             rs.close();
-        } catch (SQLException | ClassNotFoundException throwables) {
-            throwables.printStackTrace();
+        } catch (SQLException | ClassNotFoundException sqlException) {
+            sqlException.printStackTrace();
         } finally {
             disconnect(psSelect);
         }
@@ -43,8 +43,8 @@ public class DBService {
             psUpdate.setString(1,newUserName);
             psUpdate.setString(2,userName);
             psUpdate.executeUpdate();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
             return false;
         } catch (ClassNotFoundException e) {
             e.printStackTrace();

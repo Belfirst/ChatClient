@@ -4,34 +4,29 @@ import java.io.IOException;
 
 public class ChatMessageService implements MessageService{
 
-    private String host;
-    private int port;
+    private final String HOST;
+    private final int PORT;
     private NetworkService networkService;
-    private MessageProcessor processor;
+    private final MessageProcessor PROCESSOR;
 
-    public ChatMessageService(String host, int port, MessageProcessor processor) {
-
-        this.host = host;
-        this.port = port;
-        this.processor = processor;
+    public ChatMessageService(String host, int port, MessageProcessor processor) throws IOException {
+        this.HOST = host;
+        this.PORT = port;
+        this.PROCESSOR = processor;
         connectToServer();
     }
 
-    private void connectToServer() {
-        try {
-            this.networkService = new NetworkService(host, port, this);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private void connectToServer() throws IOException {
+            this.networkService = new NetworkService(HOST, PORT, this);
     }
 
     @Override
-    public void sendMessage(String msg) {
+    public void sendMessage(String msg) throws IOException {
         networkService.writeMessage(msg);
     }
 
     @Override
     public void receiveMessage(String msg) {
-        processor.processMessage(msg);
+        PROCESSOR.processMessage(msg);
     }
 }

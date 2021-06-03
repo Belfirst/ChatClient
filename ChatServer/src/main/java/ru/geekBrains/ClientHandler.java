@@ -75,7 +75,6 @@ public class ClientHandler {
         } catch (IOException e) {
             Thread.currentThread().interrupt();
             userLogger.info(currentUserName + " disconnect");
-            throw new RuntimeException("Disconnect",e);
         } finally {
             closeHandler();
         }
@@ -96,7 +95,7 @@ public class ClientHandler {
         },30000);
         userLogger.info("Authenticate started!");
         try {
-            while (true) {
+            while (!Thread.currentThread().isInterrupted() || socket.isConnected()) {
                 String authMessage = inputStream.readUTF();
                 userLogger.info("Received msg");
                 MessageDTO dto = MessageDTO.convertFromJson(authMessage);
@@ -108,7 +107,7 @@ public class ClientHandler {
                     userLogger.info("Wrong auth");
                 } else if(chatServer.isUserBusy(username)) {
                     response.setMessageType(MessageType.ERROR_MESSAGE);
-                    response.setBody("U're clone");
+                    response.setBody("You are a clone");
                     System.out.println("Clone");
                     userLogger.info("duplicate client");
                 } else {
@@ -125,10 +124,10 @@ public class ClientHandler {
                 sendMessage(response);
             }
         } catch (IOException e) {
+            Thread.currentThread().interrupt();
             closeHandler();
-            throw new RuntimeException("Error auth", e);
         }
-
+        return false;
     }
 
     public String replaceUserName(String userName, String newUserName) {
