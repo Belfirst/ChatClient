@@ -7,12 +7,12 @@ import ru.geekbrains.messages.MessageType;
 import javax.swing.*;
 import javax.swing.text.StyledEditorKit;
 import java.awt.*;
+import java.io.IOException;
 
 public class NewChat extends JFrame implements MessageProcessor {
 
     private static final int WIDTH = 500;
     private static final int HEIGHT = 500;
-    private final JPanel panelMain = new JPanel(new BorderLayout());
 
     JMenuBar menuBar = new JMenuBar();
     JMenu menu = new JMenu("Menu");
@@ -26,14 +26,10 @@ public class NewChat extends JFrame implements MessageProcessor {
     private final JPanel panelBottomUp = new JPanel(new GridLayout(1,5));
     private final JTextField tfLogin = new JTextField();
     private final JTextField tfPassword = new JTextField();
-    private final JLabel lLogin = new JLabel("UserName");
-    private final JLabel lPassword = new JLabel("Password");
-    private final JButton auth = new JButton("Auth");
 
     private final JTextArea chat = new JTextArea();
 
     private final JPanel panelBottom = new JPanel(new BorderLayout());
-    private final JButton btnSend = new JButton("Send");
     private final JTextField tfMessage = new JTextField();
 
     private MessageService messageService;
@@ -58,10 +54,13 @@ public class NewChat extends JFrame implements MessageProcessor {
         menuBar.add(menu);
         menuBar.add(help);
 
+        JLabel lLogin = new JLabel("UserName");
         panelBottomUp.add(lLogin);
         panelBottomUp.add(tfLogin);
+        JLabel lPassword = new JLabel("Password");
         panelBottomUp.add(lPassword);
         panelBottomUp.add(tfPassword);
+        JButton auth = new JButton("Auth");
         panelBottomUp.add(auth);
 
         JScrollPane scrollChat = new JScrollPane(chat);
@@ -69,8 +68,11 @@ public class NewChat extends JFrame implements MessageProcessor {
         scrollUser.setPreferredSize(new Dimension(100, 0));
 
         panelBottom.add(tfMessage, BorderLayout.CENTER);
+        JButton btnSend = new JButton("Send");
         panelBottom.add(btnSend, BorderLayout.EAST);
+        panelBottom.setVisible(false);
 
+        JPanel panelMain = new JPanel(new BorderLayout());
         add(panelMain, BorderLayout.CENTER);
         panelMain.add(scrollChat, BorderLayout.CENTER);
         panelMain.add(scrollUser, BorderLayout.EAST);
@@ -90,7 +92,12 @@ public class NewChat extends JFrame implements MessageProcessor {
 
         connect.addActionListener(e -> {
             if(IPAdd != null ) {
-                messageService = new ChatMessageService(ip, port, NewChat.this);
+                try {
+                    messageService = new ChatMessageService(ip, port, NewChat.this);
+                    panelBottomUp.setVisible(true);
+                } catch (IOException ioException) {
+                    chat.append("no connection to the server...\n");
+                }
             }
 
         });
@@ -110,7 +117,11 @@ public class NewChat extends JFrame implements MessageProcessor {
 
         auth.addActionListener(e -> sendAuth());
 
-        messageService = new ChatMessageService(ip, port, this);
+        try {
+            messageService = new ChatMessageService(ip, port, this);
+        } catch (IOException e) {
+            chat.append("no connection to the server...\n");
+        }
 
         setVisible(true);
     }
@@ -125,6 +136,8 @@ public class NewChat extends JFrame implements MessageProcessor {
             case ERROR_MESSAGE -> showError(dto);
             case AUTH_CONFIRM -> {
                 panelBottomUp.setVisible(false);
+                panelBottom.setVisible(true);
+                chat.setText(null);
                 saveHistory.openFile(dto.getLogin());
                 showHistory(dto.getLogin());
             }
@@ -143,7 +156,11 @@ public class NewChat extends JFrame implements MessageProcessor {
             dto.setTo(selected);
         }
         dto.setBody(message);
-        messageService.sendMessage(dto.convertToJson());
+        try {
+            messageService.sendMessage(dto.convertToJson());
+        } catch (IOException e) {
+            chat.append("no connection to the server...\n");
+        }
         tfMessage.setText("");
     }
 
@@ -166,8 +183,12 @@ public class NewChat extends JFrame implements MessageProcessor {
         dto.setLogin(log);
         dto.setPassword(pass);
         dto.setMessageType(MessageType.SEND_AUTH_MESSAGE);
-        messageService.sendMessage(dto.convertToJson());
-        System.out.println("Sent " + log + " " + pass);
+          try {
+              messageService.sendMessage(dto.convertToJson());
+          } catch (IOException e) {
+              chat.append("no connection to the server...\n");
+          }
+          System.out.println("Sent " + log + " " + pass);
     }
 
     public void changeNickname(String newNickname){
@@ -175,7 +196,11 @@ public class NewChat extends JFrame implements MessageProcessor {
         MessageDTO dto = new MessageDTO();
         dto.setBody(newNickname);
         dto.setMessageType(MessageType.SERVICE_MESSAGE);
-        messageService.sendMessage(dto.convertToJson());
+        try {
+            messageService.sendMessage(dto.convertToJson());
+        } catch (IOException e) {
+            chat.append("no connection to the server...\n");
+        }
         System.out.println("Sent " + newNickname);
     }
 

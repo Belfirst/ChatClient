@@ -26,7 +26,7 @@ public class ChatServer {
             userLogger.info("Server started");
             authService = new DBAuthService();
             onlineClientsList = new LinkedList<>();
-            while (true) {
+            while (!Thread.currentThread().isInterrupted()) {
                 userLogger.info("Waiting for connection...");
                 Socket socket = serverSocket.accept();
                 userLogger.info("Client connected!");
